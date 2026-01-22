@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 // Replace with your actual API base URL
-const API_BASE = import.meta.env.VITE_API_BASE;
+const API_BASE = "https://your-api.vercel.app"; // PROMENI OVO!
 
 function getTgInitData() {
   return window?.Telegram?.WebApp?.initData || "";
 }
 
-// Lokalne clown slike
+function getTgUser() {
+  return window?.Telegram?.WebApp?.initDataUnsafe?.user || null;
+}
+
 const CLOWN_IMAGES = {
   0: "/images/clowns/0.png",
   1: "/images/clowns/1.png",
@@ -20,234 +23,29 @@ const CLOWN_IMAGES = {
 
 function getClownImage(level) {
   if (level >= 6) return CLOWN_IMAGES[6];
-  if (level === 5) return CLOWN_IMAGES[5];
-  if (level === 4) return CLOWN_IMAGES[4];
-  if (level === 3) return CLOWN_IMAGES[3];
-  if (level === 2) return CLOWN_IMAGES[2];
-  if (level === 1) return CLOWN_IMAGES[1];
+  if (level >= 5) return CLOWN_IMAGES[5];
+  if (level >= 4) return CLOWN_IMAGES[4];
+  if (level >= 3) return CLOWN_IMAGES[3];
+  if (level >= 2) return CLOWN_IMAGES[2];
+  if (level >= 1) return CLOWN_IMAGES[1];
   return CLOWN_IMAGES[0];
 }
 
-const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "linear-gradient(to bottom right, #111827, #1f2937, #7c2d12)",
-    padding: "16px",
-    fontFamily: "system-ui, -apple-system, sans-serif",
-  },
-  wrapper: {
-    maxWidth: "672px",
-    margin: "0 auto",
-  },
-  header: {
-    textAlign: "center",
-    marginBottom: "24px",
-  },
-  title: {
-    fontSize: "36px",
-    fontWeight: "bold",
-    marginBottom: "8px",
-    color: "white",
-  },
-  subtitle: {
-    color: "#d1d5db",
-  },
-  searchRow: {
-    display: "flex",
-    gap: "8px",
-    marginBottom: "24px",
-  },
-  input: {
-    flex: 1,
-    padding: "12px 16px",
-    borderRadius: "12px",
-    border: "2px solid #4b5563",
-    outline: "none",
-    background: "#1f2937",
-    color: "white",
-    fontSize: "14px",
-  },
-  inputFocus: {
-    borderColor: "#f97316",
-  },
-  refreshBtn: {
-    padding: "12px 16px",
-    borderRadius: "12px",
-    border: "2px solid #4b5563",
-    background: "#1f2937",
-    color: "white",
-    cursor: "pointer",
-    fontSize: "16px",
-  },
-  error: {
-    marginBottom: "24px",
-    padding: "16px",
-    background: "#7f1d1d",
-    border: "2px solid #991b1b",
-    borderRadius: "12px",
-  },
-  errorTitle: {
-    fontWeight: 600,
-    color: "#fecaca",
-  },
-  errorText: {
-    fontSize: "14px",
-    color: "#fca5a5",
-    marginTop: "8px",
-  },
-  usersList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
-  userCard: {
-    background: "linear-gradient(to right, #1f2937, #374151)",
-    borderRadius: "16px",
-    boxShadow: "0 20px 25px -5px rgba(0,0,0,0.3)",
-    border: "1px solid #374151",
-    overflow: "hidden",
-    transition: "all 0.2s",
-  },
-  userCardHover: {
-    boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
-    borderColor: "#ea580c",
-  },
-  userCardInner: {
-    display: "flex",
-    gap: 0,
-  },
-  imageContainer: {
-    position: "relative",
-    width: "112px",
-    flexShrink: 0,
-    background: "#111827",
-  },
-  clownImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  },
-  levelBadge: {
-    position: "absolute",
-    bottom: "8px",
-    right: "8px",
-    background: "linear-gradient(to right, #ea580c, #dc2626)",
-    color: "white",
-    fontWeight: "bold",
-    fontSize: "12px",
-    padding: "4px 10px",
-    borderRadius: "8px",
-    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.3)",
-    border: "1px solid #fb923c",
-  },
-  userInfo: {
-    flex: 1,
-    padding: "16px",
-    minWidth: 0,
-  },
-  nameContainer: {
-    marginBottom: "8px",
-  },
-  name: {
-    fontWeight: "bold",
-    fontSize: "18px",
-    color: "white",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  username: {
-    fontSize: "14px",
-    color: "#9ca3af",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  locationRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    marginBottom: "6px",
-    color: "#d1d5db",
-  },
-  locationText: {
-    fontSize: "14px",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    flex: 1,
-  },
-  statusRow: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "8px",
-    marginBottom: "6px",
-    color: "#d1d5db",
-    fontStyle: "italic",
-  },
-  statusText: {
-    fontSize: "13px",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    flex: 1,
-  },
-  timeRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    fontSize: "12px",
-    color: "#6b7280",
-  },
-  emptyState: {
-    textAlign: "center",
-    paddingTop: "48px",
-    paddingBottom: "48px",
-  },
-  emptyIcon: {
-    fontSize: "60px",
-    marginBottom: "16px",
-  },
-  emptyTitle: {
-    fontSize: "20px",
-    fontWeight: 600,
-    color: "#e5e7eb",
-  },
-  emptyText: {
-    color: "#9ca3af",
-    marginTop: "8px",
-  },
-  stats: {
-    marginTop: "24px",
-    padding: "16px",
-    background: "#1f2937",
-    borderRadius: "12px",
-    border: "2px solid #374151",
-    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.3)",
-  },
-  statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "16px",
-    textAlign: "center",
-  },
-  statValue: {
-    fontSize: "24px",
-    fontWeight: "bold",
-  },
-  statLabel: {
-    fontSize: "12px",
-    color: "#9ca3af",
-    marginTop: "4px",
-  },
-};
-
 export default function App() {
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [users, setUsers] = useState([]);
+  const [myData, setMyData] = useState(null);
   const [err, setErr] = useState("");
   const [q, setQ] = useState("");
-  const [hoveredCard, setHoveredCard] = useState(null);
+  const [saving, setSaving] = useState(false);
 
+  // Edit states
+  const [editLocation, setEditLocation] = useState("");
+  const [editStatus, setEditStatus] = useState("");
+
+  const tgUser = getTgUser();
+
+  // Filter & sort
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return users;
@@ -264,175 +62,385 @@ export default function App() {
     return [...filtered].sort((a, b) => (b.level ?? 0) - (a.level ?? 0));
   }, [filtered]);
 
+  // Init Telegram WebApp
   useEffect(() => {
     const tg = window?.Telegram?.WebApp;
     tg?.ready?.();
     tg?.expand?.();
+    tg?.setHeaderColor?.("#111827");
+    tg?.setBackgroundColor?.("#111827");
   }, []);
+
+  // Load users
+  const loadUsers = async () => {
+    setErr("");
+    try {
+      const initData = getTgInitData();
+      const r = await fetch(`${API_BASE}/api/users`, {
+        headers: initData ? { "x-telegram-init-data": initData } : {},
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      setUsers(Array.isArray(data) ? data : []);
+
+      // Find my data
+      if (tgUser?.id) {
+        const me = data.find((u) => u.telegram_id === tgUser.id);
+        if (me) {
+          setMyData(me);
+          setEditLocation(me.location || "");
+          setEditStatus(me.status_message || "");
+        }
+      }
+    } catch (e) {
+      setErr(String(e?.message || e));
+    }
+  };
 
   useEffect(() => {
-    async function load() {
-      setErr("");
-      try {
-        const initData = getTgInitData();
-        const r = await fetch(`${API_BASE}/api/users`, {
-          headers: initData ? { "x-telegram-init-data": initData } : {},
-        });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-        setUsers(Array.isArray(data) ? data : []);
-      } catch (e) {
-        setErr(String(e?.message || e));
-      }
-    }
-    load();
+    loadUsers();
   }, []);
 
-  return (
-    <div style={styles.container}>
-      <div style={styles.wrapper}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>🤡 Klovn Dashboard 🤡</h1>
-          <p style={styles.subtitle}>Klovnovi u realnom vremenu</p>
-        </div>
+  // Level up
+  const handleLevelUp = async () => {
+    if (!tgUser?.id || saving) return;
+    setSaving(true);
+    try {
+      const initData = getTgInitData();
+      const r = await fetch(`${API_BASE}/api/level-up`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(initData ? { "x-telegram-init-data": initData } : {}),
+        },
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      await loadUsers();
+      window.Telegram?.WebApp?.showAlert?.("✅ Level povećan!");
+    } catch (e) {
+      window.Telegram?.WebApp?.showAlert?.(`❌ Greška: ${e.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
 
-        <div style={styles.searchRow}>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="🔍 Traži klovnove..."
-            style={styles.input}
-            onFocus={(e) => (e.target.style.borderColor = "#f97316")}
-            onBlur={(e) => (e.target.style.borderColor = "#4b5563")}
-          />
+  // Save profile
+  const handleSaveProfile = async () => {
+    if (!tgUser?.id || saving) return;
+    setSaving(true);
+    try {
+      const initData = getTgInitData();
+      const r = await fetch(`${API_BASE}/api/update-profile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(initData ? { "x-telegram-init-data": initData } : {}),
+        },
+        body: JSON.stringify({
+          location: editLocation.trim() || null,
+          status_message: editStatus.trim() || null,
+        }),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      await loadUsers();
+      window.Telegram?.WebApp?.showAlert?.("✅ Profil sačuvan!");
+    } catch (e) {
+      window.Telegram?.WebApp?.showAlert?.(`❌ Greška: ${e.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900 text-white">
+      {/* Tabs */}
+      <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur border-b border-gray-700">
+        <div className="flex">
           <button
-            onClick={() => window.location.reload()}
-            style={styles.refreshBtn}
-            onMouseEnter={(e) => (e.target.style.background = "#374151")}
-            onMouseLeave={(e) => (e.target.style.background = "#1f2937")}
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex-1 py-4 text-center font-semibold transition-all ${
+              activeTab === "dashboard"
+                ? "bg-orange-600 text-white"
+                : "text-gray-400 hover:text-white"
+            }`}
           >
-            ↻
+            🤡 Klovnovi
+          </button>
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`flex-1 py-4 text-center font-semibold transition-all ${
+              activeTab === "profile"
+                ? "bg-orange-600 text-white"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            👤 Ja
           </button>
         </div>
+      </div>
 
-        {err ? (
-          <div style={styles.error}>
-            <div style={styles.errorTitle}>❌ Greška: {err}</div>
-            <div style={styles.errorText}>
-              (Ako otvaraš u običnom browseru, moguće je da backend očekuje Telegram initData.)
-            </div>
+      {/* Dashboard Tab */}
+      {activeTab === "dashboard" && (
+        <div className="p-4 max-w-2xl mx-auto">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold mb-2">🤡 Klovn Dashboard 🤡</h1>
+            <p className="text-gray-400">Klovnovi u realnom vremenu</p>
           </div>
-        ) : null}
 
-        <div style={styles.usersList}>
-          {sorted.map((u) => {
-            const level = u.level ?? 0;
-            const clownImg = getClownImage(level);
-            const isHovered = hoveredCard === u.telegram_id;
+          {/* Search */}
+          <div className="flex gap-2 mb-6">
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="🔍 Traži klovnove..."
+              className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-600 bg-gray-800 text-white outline-none focus:border-orange-500 transition-colors"
+            />
+            <button
+              onClick={loadUsers}
+              className="px-4 py-3 rounded-xl border-2 border-gray-600 bg-gray-800 hover:bg-gray-700 transition-colors"
+            >
+              ↻
+            </button>
+          </div>
 
-            return (
-              <div
-                key={u.telegram_id}
-                style={{
-                  ...styles.userCard,
-                  ...(isHovered ? styles.userCardHover : {}),
-                }}
-                onMouseEnter={() => setHoveredCard(u.telegram_id)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
-                <div style={styles.userCardInner}>
-                  <div style={styles.imageContainer}>
-                    <img
-                      src={clownImg}
-                      alt={`Level ${level}`}
-                      style={styles.clownImage}
-                      onError={(e) => {
-                        e.target.src =
-                          'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Ctext x="50%25" y="50%25" font-size="40" text-anchor="middle" dy=".3em"%3E🤡%3C/text%3E%3C/svg%3E';
-                      }}
-                    />
-                    <div style={styles.levelBadge}>LVL {level}</div>
-                  </div>
+          {/* Error */}
+          {err && (
+            <div className="mb-6 p-4 bg-red-900 border-2 border-red-700 rounded-xl">
+              <div className="font-semibold text-red-200">❌ Greška: {err}</div>
+            </div>
+          )}
 
-                  <div style={styles.userInfo}>
-                    <div style={styles.nameContainer}>
-                      <div style={styles.name}>
-                        {u.clown_name || u.first_name || "Klovn"}
+          {/* Users List */}
+          <div className="space-y-3">
+            {sorted.map((u) => {
+              const level = u.level ?? 0;
+              const clownImg = getClownImage(level);
+
+              return (
+                <div
+                  key={u.telegram_id}
+                  className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl shadow-xl border border-gray-600 hover:border-orange-600 transition-all overflow-hidden"
+                >
+                  <div className="flex">
+                    <div className="relative w-28 flex-shrink-0 bg-gray-900">
+                      <img
+                        src={clownImg}
+                        alt={`Level ${level}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src =
+                            'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Ctext x="50%25" y="50%25" font-size="40" text-anchor="middle" dy=".3em"%3E🤡%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                      <div className="absolute bottom-2 right-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold text-xs px-2 py-1 rounded-lg shadow-lg border border-orange-400">
+                        LVL {level}
                       </div>
-                      {u.username && (
-                        <div style={styles.username}>@{u.username}</div>
-                      )}
                     </div>
 
-                    <div style={styles.locationRow}>
-                      <span style={{ fontSize: "16px" }}>📍</span>
-                      <span style={styles.locationText}>
-                        {u.location || "—"}
-                      </span>
-                    </div>
+                    <div className="flex-1 p-4 min-w-0">
+                      <div className="mb-2">
+                        <div className="font-bold text-lg truncate">
+                          {u.clown_name || u.first_name || "Klovn"}
+                        </div>
+                        {u.username && (
+                          <div className="text-sm text-gray-400 truncate">
+                            @{u.username}
+                          </div>
+                        )}
+                      </div>
 
-                    {u.status_message && (
-                      <div style={styles.statusRow}>
-                        <span style={{ fontSize: "16px" }}>💬</span>
-                        <span style={styles.statusText}>
-                          {u.status_message}
+                      <div className="flex items-center gap-2 mb-1 text-gray-300">
+                        <span>📍</span>
+                        <span className="text-sm truncate flex-1">
+                          {u.location || "—"}
                         </span>
                       </div>
-                    )}
 
-                    <div style={styles.timeRow}>
-                      <span>🕒</span>
-                      <span>
-                        {u.updated_at
-                          ? new Date(u.updated_at).toLocaleString("sr-RS", {
-                              day: "numeric",
-                              month: "short",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "—"}
-                      </span>
+                      {u.status_message && (
+                        <div className="flex items-start gap-2 mb-1 text-gray-300 italic">
+                          <span>💬</span>
+                          <span className="text-sm truncate flex-1">
+                            {u.status_message}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>🕒</span>
+                        <span>
+                          {u.updated_at
+                            ? new Date(u.updated_at).toLocaleString("sr-RS", {
+                                day: "numeric",
+                                month: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {!err && sorted.length === 0 ? (
-          <div style={styles.emptyState}>
-            <div style={styles.emptyIcon}>🤡</div>
-            <div style={styles.emptyTitle}>Nema klovnova</div>
-            <div style={styles.emptyText}>Čeka se klovn...</div>
+              );
+            })}
           </div>
-        ) : null}
 
-        {sorted.length > 0 && (
-          <div style={styles.stats}>
-            <div style={styles.statsGrid}>
-              <div>
-                <div style={{ ...styles.statValue, color: "#f97316" }}>
-                  {sorted.length}
-                </div>
-                <div style={styles.statLabel}>Ukupno</div>
+          {/* Empty State */}
+          {!err && sorted.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🤡</div>
+              <div className="text-xl font-semibold text-gray-300">
+                Nema klovnova
               </div>
-              <div>
-                <div style={{ ...styles.statValue, color: "#ef4444" }}>
-                  {Math.max(...sorted.map((u) => u.level ?? 0))}
+              <div className="text-gray-400 mt-2">Čeka se klovn...</div>
+            </div>
+          )}
+
+          {/* Stats */}
+          {sorted.length > 0 && (
+            <div className="mt-6 p-4 bg-gray-800 rounded-xl border-2 border-gray-700 shadow-lg">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-orange-500">
+                    {sorted.length}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Ukupno</div>
                 </div>
-                <div style={styles.statLabel}>Max level</div>
-              </div>
-              <div>
-                <div style={{ ...styles.statValue, color: "#d1d5db" }}>
-                  {sorted.filter((u) => u.location).length}
+                <div>
+                  <div className="text-2xl font-bold text-red-500">
+                    {Math.max(...sorted.map((u) => u.level ?? 0))}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Max level</div>
                 </div>
-                <div style={styles.statLabel}>Sa lokacijom</div>
+                <div>
+                  <div className="text-2xl font-bold text-gray-300">
+                    {sorted.filter((u) => u.location).length}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Sa lokacijom</div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+
+      {/* Profile Tab */}
+      {activeTab === "profile" && (
+        <div className="p-4 max-w-md mx-auto">
+          {myData ? (
+            <>
+              {/* Profile Card */}
+              <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl shadow-xl border border-gray-600 overflow-hidden mb-6">
+                <div className="relative">
+                  <img
+                    src={getClownImage(myData.level ?? 0)}
+                    alt="Your clown"
+                    className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      e.target.src =
+                        'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Ctext x="50%25" y="50%25" font-size="60" text-anchor="middle" dy=".3em"%3E🤡%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                  <div className="absolute bottom-4 right-4 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold px-4 py-2 rounded-xl shadow-lg border-2 border-orange-400">
+                    Level {myData.level ?? 0}
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <h2 className="text-2xl font-bold mb-1">
+                    {myData.clown_name || myData.first_name || "Klovn"}
+                  </h2>
+                  {myData.username && (
+                    <p className="text-gray-400 mb-4">@{myData.username}</p>
+                  )}
+
+                  <button
+                    onClick={handleLevelUp}
+                    disabled={saving || (myData.level ?? 0) >= 6}
+                    className={`w-full py-3 rounded-xl font-semibold transition-all ${
+                      saving || (myData.level ?? 0) >= 6
+                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-lg"
+                    }`}
+                  >
+                    {saving
+                      ? "⏳ Čekaj..."
+                      : (myData.level ?? 0) >= 6
+                      ? "⚠️ Max level!"
+                      : "🎚️ Level +1"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Edit Forms */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-gray-300">
+                    📍 Lokacija
+                  </label>
+                  <input
+                    type="text"
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    placeholder="Kafana Kod Mike"
+                    maxLength={200}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-600 bg-gray-800 text-white outline-none focus:border-orange-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2 text-gray-300">
+                    💬 Status poruka
+                  </label>
+                  <input
+                    type="text"
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    placeholder="Pijem kafu ☕"
+                    maxLength={200}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-600 bg-gray-800 text-white outline-none focus:border-orange-500 transition-colors"
+                  />
+                  <div className="text-xs text-gray-400 mt-1 text-right">
+                    {editStatus.length}/200
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
+                    saving
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-lg"
+                  }`}
+                >
+                  {saving ? "⏳ Čuvanje..." : "💾 Sačuvaj profil"}
+                </button>
+
+                {editStatus && (
+                  <button
+                    onClick={() => {
+                      setEditStatus("");
+                      handleSaveProfile();
+                    }}
+                    disabled={saving}
+                    className="w-full py-3 rounded-xl font-semibold bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                  >
+                    🗑️ Obriši status
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🤡</div>
+              <div className="text-xl font-semibold text-gray-300">
+                Učitavanje...
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
