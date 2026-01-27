@@ -181,7 +181,7 @@ export default function App() {
 
       {/* Dashboard Tab */}
       {activeTab === "dashboard" && (
-        <div className="p-4 max-w-2xl mx-auto">
+        <div className="p-4 pb-24 max-w-2xl mx-auto">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold mb-2">🤡 Klovn Dashboard 🤡</h1>
             <p className="text-gray-400">Klovnovi u realnom vremenu</p>
@@ -326,7 +326,7 @@ export default function App() {
 
       {/* Profile Tab */}
       {activeTab === "profile" && (
-        <div className="p-4 max-w-md mx-auto">
+        <div className="p-4 pb-24 max-w-md mx-auto">
           {myData ? (
             <>
               {/* Profile Card */}
